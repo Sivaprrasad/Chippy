@@ -1,7 +1,9 @@
 package com.example.chippy;
 
 import android.graphics.Point;
+import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.Display;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,9 +15,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_main);
+
+        final MediaPlayer catsoundmp = MediaPlayer.create(this, R.raw.sample);
 
         // Get size of the screen
-        Display display = getWindowManager().getDefaultDisplay();
+                Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
 
