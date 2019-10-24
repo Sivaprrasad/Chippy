@@ -18,29 +18,35 @@ public class Enemy {
     private int xPosition;
     private int yPosition;
 
+    ArrayList<Bitmap> bitmapArray = new ArrayList<Bitmap>();
+
     // Give your enemy some bullets
     // I am using a Rect object because I am lazy and
     // I don't want to manage another set of hitbox
     // I will be using the Rect object's built in interect functions
     private ArrayList<Rect> bullets = new ArrayList<Rect>();
-    private final int BULLET_WIDTH = 15;
+    private final int BULLET_WIDTH = 25;
 
-    public Enemy(Context context, int x, int y) {
+    public Enemy(Context context, int x, int y, Bitmap image, Rect hitbox) {
         // 1. set up the initial position of the Enemy
         this.xPosition = x;
         this.yPosition = y;
 
         // 2. Set the default image - all enemies have same image
-        this.image = BitmapFactory.decodeResource(context.getResources(), R.drawable.enemy);
+        this.image = image;
+//        this.image = BitmapFactory.decodeResource(context.getResources(), R.drawable.enemy);
 
-        // 3. Set the default hitbox - all enemies have same hitbox
-        this.hitbox = new Rect(
-                this.xPosition,
-                this.yPosition,
-                this.xPosition + this.image.getWidth(),
-                this.yPosition + this.image.getHeight()
-        );
+        this.hitbox = hitbox;
+//        // 3. Set the default hitbox - all enemies have same hitbox
+//        this.hitbox = new Rect(
+//                this.xPosition,
+//                this.yPosition,
+//                this.xPosition + this.image.getWidth(),
+//                this.yPosition + this.image.getHeight()
+//        );
     }
+
+
 
     // Getter and setters
     // Autogenerate this by doing Right Click --> Generate --> Getter&Setter

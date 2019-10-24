@@ -1,6 +1,7 @@
 package com.example.chippy;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -12,7 +13,11 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+
+import static android.graphics.BitmapFactory.*;
 
 public class GameEngine extends SurfaceView implements Runnable {
 
@@ -22,6 +27,23 @@ public class GameEngine extends SurfaceView implements Runnable {
     // screen size
     int screenHeight;
     int screenWidth;
+    int min = 2;
+    int max = 5;
+
+//    int hp;
+    int score = 0;
+    int highScore = 0;
+//    boolean enemyUp = true;
+
+    List<PowerUps> pUp = new ArrayList<PowerUps>();
+    // ----------------------------
+    // ## GAME STATS
+    // ----------------------------
+
+    int playerlives =  10;
+    int enemylives = 20;
+    int oEnemylives = 10;
+    int BULLET_SPEED = 20;
 
     // game state
     boolean gameIsRunning;
@@ -34,31 +56,34 @@ public class GameEngine extends SurfaceView implements Runnable {
     SurfaceHolder holder;
     Canvas canvas;
     Paint paintbrush;
+    List<Enemy> enemyList = new ArrayList<Enemy>();
 
-
-
-    // -----------------------------------
-    // GAME SPECIFIC VARIABLES
-    // -----------------------------------
-
-    // ----------------------------
-    // ## SPRITES
-    // ----------------------------
-
-    // represent the TOP LEFT CORNER OF THE GRAPHIC
-
+    Bitmap image;
+    ArrayList<Rect> bullets = new ArrayList<Rect>();
+    int random = new Random().nextInt((max - min) + 1) + min;
     Player player;
     Enemy enemy1;
+    //Other Enemies
+    Enemy enemy2;
+    Enemy enemy3;
+    Enemy enemy4;
+
+
+    Bitmap powpic;
+    PowerUps powerUp;
+    PowerUps addlives;
+
+
+
     //Enemy enemy2;
+
 
     Bitmap background;
     int bgXPosition = 0;
     int backgroundRightSide = 0;
-    // ----------------------------
-    // ## GAME STATS
-    // ----------------------------
 
     int lives = 10;
+    private int bullet;
 
 
     public GameEngine(Context context, int w, int h) {
@@ -71,20 +96,53 @@ public class GameEngine extends SurfaceView implements Runnable {
         this.screenWidth = w;
         this.screenHeight = h;
 
+        int SQUARE_WIDTH = 100;
+//        this.hp = 5;
+        this.score = 0;
+
 
         this.printScreenInfo();
 
         // @TODO: Add your sprites
 
 
-        // put the initial starting position of your player and enemies
-        this.player = new Player(getContext(), 100, 600);
-        this.enemy1 = new Enemy(getContext(), 1300, 120);
-//        this.enemy2 = new Enemy(getContext(), 1500, 500);
 
-        // setup the background
-        this.background = BitmapFactory.decodeResource(context.getResources(), R.drawable.background);
-        // dynamically resize the background to fit the device
+        // put the initial starting position of your player and enemies
+        this.player = new Player(context, 100, 600, SQUARE_WIDTH, 2);
+//        this.enemy1 = new Enemy(getContext(), 1200, 500);
+//        this.part1 = new Enemy(getContext(), 1000, 600);
+        this.image = decodeResource(context.getResources(), R.drawable.enemy);
+        this.enemy1 = new Enemy(getContext(), 1350, 300, image , new Rect(1350,300,1350+image.getWidth(),300+image.getHeight())
+        );
+
+        this.image = decodeResource(context.getResources(),R.drawable.part1);
+        this.enemy2 = new Enemy(getContext(), 1300, 100, image,new Rect(1300,100,1300+image.getWidth(),100+image.getHeight() ));
+
+        this.image = decodeResource(context.getResources(), R.drawable.part1);
+        this.enemy3 = new Enemy(getContext(), 1100, 250,image,new Rect(1100,250,1100+image.getWidth(),250+image.getHeight() ));
+
+        this.image = decodeResource(context.getResources(), R.drawable.part1 );
+        this.enemy4 = new Enemy(getContext(), 1300, 500,image,new Rect(1300,500,1300+image.getWidth(),500+image.getHeight()));
+
+        enemyList.add(enemy1);
+        enemyList.add(enemy2);
+        enemyList.add(enemy3);
+        enemyList.add(enemy4);
+
+
+        this.powpic = decodeResource(context.getResources(), R.drawable.powerup);
+        this.powerUp = new PowerUps(getContext(),random*1000, random*300,powpic);
+
+        this.powpic = decodeResource(context.getResources(), R.drawable.extralife);
+        this.addlives = new PowerUps(getContext(),random*1000, random*700,powpic);
+
+
+        pUp.add(powerUp);
+        pUp.add(addlives);
+
+        // setup the backgroundrandom
+        this.background = decodeResource(context.getResources(), R.drawable.backgroundrandom);
+        // dynamically resize the backgroundrandom to fit the device
         this.background = Bitmap.createScaledBitmap(
                 this.background,
                 this.screenWidth,
@@ -111,6 +169,12 @@ public class GameEngine extends SurfaceView implements Runnable {
         //@TODO: Place the enemies in a random location
 
     }
+    public int getrand(int min, int max){
+
+        return (int)(Math.random() * max + min);
+
+    }
+
     
     // ------------------------------
     // GAME STATE FUNCTIONS (run, stop, start)
@@ -128,6 +192,7 @@ public class GameEngine extends SurfaceView implements Runnable {
         gameIsRunning = false;
         try {
             gameThread.join();
+            if(this.highScore < this.score) this.highScore = this.score;
         } catch (InterruptedException e) {
             // Error
         }
@@ -137,6 +202,13 @@ public class GameEngine extends SurfaceView implements Runnable {
         gameIsRunning = true;
         gameThread = new Thread(this);
         gameThread.start();
+    }
+
+    public void restartGame()
+    {
+        this.score = 0;
+//        this.hp = 5;
+        gameIsRunning = true;
     }
 
 
@@ -150,18 +222,16 @@ public class GameEngine extends SurfaceView implements Runnable {
 
     public void updatePositions() {
 
+
         // UPDATE BACKGROUND POSITION
-        // 1. Move the background
-        this.bgXPosition = this.bgXPosition - 50;
+        // 1. Move the backgroundrandom
+        this.bgXPosition = this.bgXPosition - 10;
 
         backgroundRightSide = this.bgXPosition + this.background.getWidth();
         // 2. Background collision detection
         if (backgroundRightSide < 0) {
             this.bgXPosition = 0;
         }
-
-
-
         numLoops = numLoops + 1;
 
         // @TODO: Update position of player based on mouse tap
@@ -178,36 +248,22 @@ public class GameEngine extends SurfaceView implements Runnable {
             player.updateHitbox();
         }
 
-        // MAKE ENEMY MOVE
-        // - enemy moves left forever
-        // - when enemy touches LEFT wall, respawn on RIGHT SIDE
-        this.enemy1.setxPosition(this.enemy1.getxPosition());
-
-        // MOVE THE HITBOX (recalcluate the position of the hitbox)
-        this.enemy1.updateHitbox();
-
-        if (this.enemy1.getxPosition() <= 0) {
-            // restart the enemy in the starting position
-            this.enemy1.setxPosition(1300);
-            this.enemy1.setyPosition(120);
-            this.enemy1.updateHitbox();
-        }
 
         // DEAL WITH BULLETS
 
         // Shoot a bullet every (5) iterations of the loop
-        if (numLoops % 5  == 0) {
+        if (numLoops % 10  == 0) {
             this.enemy1.spawnBullet();
         }
 
-        // Shoot a bullet every (5) iterations of the loop
+//         Shoot a bullet every (5) iterations of the loop
         if (numLoops % 5  == 0) {
             this.player.spawnBullet();
         }
 
 
         // MOVING THE BULLETS
-        int BULLET_SPEED = 50;
+
         for (int i = 0; i < this.enemy1.getBullets().size();i++) {
             Rect bullet = this.enemy1.getBullets().get(i);
             bullet.left = bullet.left - BULLET_SPEED;
@@ -251,114 +307,131 @@ public class GameEngine extends SurfaceView implements Runnable {
             Rect bullet = this.enemy1.getBullets().get(i);
 
             if (this.player.getHitbox().intersect(bullet)) {
-                this.player.setxPosition(100);
-                this.player.setyPosition(600);
                 this.player.updateHitbox();
-                lives = lives - 1;
+                playerlives = playerlives - 1;
             }
-
         }
-/*
+
+        if (playerlives == 0) {
+            getContext().startActivity(new Intent(getContext(),LooseScreenActivity.class));
+        }
+
         // COLLISION DETECTION BETWEEN BULLET AND ENEMY
         for (int i = 0; i < this.player.getBullets().size();i++) {
             Rect bullet = this.player.getBullets().get(i);
 
             if (this.enemy1.getHitbox().intersect(bullet)) {
-                this.enemy1.setxPosition(100);
-                this.enemy1.setyPosition(600);
-                this.enemy1.updateHitbox();
-                lives = lives - 1;
+                this.player.getBullets().remove(bullet);
+                enemylives = enemylives - 1;
+                score = score + 1;
             }
 
+            if (this.enemy2.getHitbox().intersect(bullet)) {
+                this.player.getBullets().remove(bullet);
+                oEnemylives = oEnemylives -1 ;
+                if (oEnemylives == 0) {
+                    enemyList.remove(enemy2);
+                    enemy2.setHitbox(new Rect(0, 0, 0, 0));
+                    score = score + 1;
+                }
+            }
+
+            if (this.enemy3.getHitbox().intersect(bullet)) {
+                this.player.getBullets().remove(bullet);
+                oEnemylives = oEnemylives -1;
+                if (oEnemylives == 0) {
+                    enemyList.remove(enemy3);
+                    enemy3.setHitbox(new Rect(0, 0, 0, 0));
+                    score = score + 1;
+                }
+            }
+            if (this.enemy4.getHitbox().intersect(bullet)) {
+                this.player.getBullets().remove(bullet);
+                oEnemylives = oEnemylives -1;
+                if (oEnemylives == 0) {
+                    enemyList.remove(enemy4);
+                    enemy4.setHitbox(new Rect(0, 0, 0, 0));
+                    score = score + 1;
+                }
+            }
         }
-*/
 
+        if (enemylives == 0){
+            enemyList.removeAll(enemyList);
+            enemy1.setHitbox(new Rect(0, 0, 0, 0));
+            getContext().startActivity(new Intent(getContext(),WinScreenActivity.class));
 
-
-        // MAKE ENEMY2 MOVE
-        // MAKE ENEMY MOVE
-        // - enemy moves left forever
-        // - when enemy touches LEFT wall, respawn on RIGHT SIDE
- /*
-        this.enemy2.setxPosition(this.enemy2.getxPosition()-25);
-
-        // MOVE THE HITBOX (recalcluate the position of the hitbox)
-        this.enemy2.updateHitbox();
-
-        if (this.enemy2.getxPosition() <= 0) {
-            // restart the enemy in the starting position
-            this.enemy2.setxPosition(1500);
-            this.enemy2.setyPosition(500);
-            this.enemy2.updateHitbox();
         }
-*/
+
+        this.powerUp.setxPosition(this.powerUp.getxPosition()-15);
+        this.powerUp.updateHitbox();
+        this.addlives.setxPosition(this.addlives.getxPosition()-10);
+        this.addlives.updateHitbox();
+
+        int rand = new Random().nextInt((max - min) + 1) + min;
+
+        if(this.powerUp.getxPosition()<0 ){
+            this.powpic = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.powerup);
+
+            this.powerUp = new PowerUps(getContext(),rand*1000, rand*370,powpic);
+            pUp.add(powerUp);
+
+        }
+
+        if(this.addlives.getxPosition()<0 ){
+            this.powpic = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.extralife);
+
+            this.addlives = new PowerUps(getContext(),rand*1000, rand*370,powpic);
+            pUp.add(addlives);
+
+        }
+
 
         // @TODO:  Check collisions between enemy and player
         if (this.player.getHitbox().intersect(this.enemy1.getHitbox()) == true) {
-            // the enemy and player are colliding
-            Log.d(TAG, "++++++ENEMY AND PLAYER COLLIDING!");
-
-            // @TODO: What do you want to do next?
-
-            // RESTART THE PLAYER IN ORIGINAL POSITION
-            // -------
-            // 1. Restart the player
-            // 2. Restart the player's hitbox
-            this.player.setxPosition(100);
-            this.player.setyPosition(600);
-            this.player.updateHitbox();
-
             // decrease the lives
-            lives = lives - 1;
+            playerlives = playerlives - 1;
+        }
+
+        if (this.player.getHitbox().intersect(this.enemy2.getHitbox()) == true) {
+            // decrease the lives
+            playerlives = playerlives - 1;
+        }
+
+        if (this.player.getHitbox().intersect(this.enemy3.getHitbox()) == true) {
+            // decrease the lives
+            playerlives = playerlives - 1;
+        }
+
+        if (this.player.getHitbox().intersect(this.enemy4.getHitbox()) == true) {
+            // decrease the lives
+            playerlives = playerlives - 1;
+        }
+
+        if (this.player.getHitbox().intersect(this.powerUp.getHitbox()) == true) {
+            int BULLET_SPEED = 50;
+            player.spawnBullet();
+        }
+
+        if (this.player.getHitbox().intersect(this.addlives.getHitbox()) == true) {
+            pUp.remove(addlives);
+            playerlives = playerlives + 1;
 
         }
 
         if (this.fingerAction == "mousedown") {
-            // if mousedown, then move player up
-            // Make the UP movement > than down movement - this will
-            // make it look like the player is moving up alot
-//            player.setyPosition(player.getyPosition() - 100);
+
             player.setxPosition(player.x);
             player.setyPosition(player.y);
             player.updateHitbox();
 
 
         }
-
-/*
-        // @TODO:  Check collisions between enemy2 and player
-        if (this.player.getHitbox().intersect(this.enemy2.getHitbox()) == true) {
-            // the enemy and player are colliding
-            Log.d(TAG, "++++++ENEMY 2 AND PLAYER COLLIDING!");
-
-            // @TODO: What do you want to do next?
-
-            // RESTART THE PLAYER IN ORIGINAL POSITION
-            // -------
-            // 1. Restart the player
-            // 2. Restart the player's hitbox
-            this.player.setxPosition(100);
-            this.player.setyPosition(600);
-            this.player.updateHitbox();
-
-            // decrease the lives
-            lives = lives - 1;
-
-        }
-*/
-
-
-
-
     }
 
     public void redrawSprites() {
         if (this.holder.getSurface().isValid()) {
             this.canvas = this.holder.lockCanvas();
-
-            //----------------
-
-
 
             // configure the drawing tools
             this.canvas.drawColor(Color.argb(255,255,255,255));
@@ -392,24 +465,23 @@ public class GameEngine extends SurfaceView implements Runnable {
             // draw the player's hitbox
             canvas.drawRect(player.getHitbox(), paintbrush);
 
-            // draw the enemy graphic on the screen
-            canvas.drawBitmap(enemy1.getImage(), enemy1.getxPosition(), enemy1.getyPosition(), paintbrush);
-            // 2. draw the enemy's hitbox
-            canvas.drawRect(enemy1.getHitbox(), paintbrush);
+            for (int i = 0; i < enemyList.size(); i++) {
+                Enemy alleni = enemyList.get(i);
+                canvas.drawBitmap(alleni.getImage(), alleni.getxPosition(), alleni.getyPosition(), paintbrush);
+            }
 
-/*
-            // draw enemy 2 on the screen
-            // draw the enemy graphic on the screen
-            canvas.drawBitmap(enemy2.getImage(), enemy2.getxPosition(), enemy2.getyPosition(), paintbrush);
-            // 2. draw the enemy's hitbox
-            canvas.drawRect(enemy2.getHitbox(), paintbrush);
-*/
+            canvas.drawBitmap(powerUp.getImage(), powerUp.getxPosition(), powerUp.getyPosition(), paintbrush);
+            canvas.drawRect(powerUp.getHitbox(), paintbrush);
+
+            canvas.drawBitmap(addlives.getImage(), addlives.getxPosition(), addlives.getyPosition(), paintbrush);
+            canvas.drawRect(addlives.getHitbox(), paintbrush);
 
             // draw enemy bullet on screen
             for (int i = 0; i < this.enemy1.getBullets().size(); i++) {
                 Rect bullet = this.enemy1.getBullets().get(i);
                 canvas.drawRect(bullet, paintbrush);
             }
+
 
             // draw player bullet on screen
             for (int i = 0; i < this.player.getBullets().size(); i++) {
@@ -422,14 +494,14 @@ public class GameEngine extends SurfaceView implements Runnable {
             // -----------------------------
             paintbrush.setColor(Color.YELLOW);
             paintbrush.setTextSize(60);
-            canvas.drawText("Lives: " + lives,
+            canvas.drawText("Remaining Lives: " + playerlives,
                     1100,
                     800,
                     paintbrush
             );
 
 
-            canvas.drawText("Bullets: " + this.enemy1.getBullets().size(),
+            canvas.drawText("Score: " + score,
                     1100,
                     720,
                     paintbrush
@@ -471,11 +543,8 @@ public class GameEngine extends SurfaceView implements Runnable {
 
                 Log.d("PUSH", "PERSON CLICKED AT: (" + event.getX() + "," + event.getY() + ")");
                 fingerAction = "mousedown";
+//                this.player.spawnBullet();
                 break;
-//            case MotionEvent.ACTION_DOWN:
-//                fingerAction = "mouseup";
-//
-//                break;
         }
         return true;
     }

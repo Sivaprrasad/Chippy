@@ -19,16 +19,20 @@ public class Player {
 
     private int xPosition;
     private int yPosition;
+    public int width;
+    private int speed;
 
     private ArrayList<Rect> pbullets = new ArrayList<Rect>();
     private final int pBULLET_WIDTH = 20;
 
 
 
-    public Player(Context context, int x, int y) {
+    public Player(Context context, int x, int y,int width,int speed) {
         // 1. set up the initial position of the Enemy
         this.xPosition = x;
         this.yPosition = y;
+        this.width = width;
+        this.speed = speed;
 
 
         // 2. Set the default image - all enemies have same image
@@ -77,6 +81,12 @@ public class Player {
         this.yPosition = yPosition;
     }
 
+    public int getSpeed() { return this.speed; }
+
+    public int getWidth() { return width; }
+
+    public void setWidth(int width) { this.width = width; }
+
 
     public ArrayList<Rect> getBullets() {
         return pbullets;
@@ -101,7 +111,7 @@ public class Player {
 
     // Make a new bullet
     public void spawnBullet() {
-        // make bullet come out of middle of enemty
+        // make bullet come out of middle of enemy
         Rect pbullet = new Rect(this.xPosition,
                 this.yPosition + this.image.getHeight() / 2,
                 this.xPosition + pBULLET_WIDTH,
