@@ -27,7 +27,7 @@ public class Enemy {
     private ArrayList<Rect> bullets = new ArrayList<Rect>();
     private final int BULLET_WIDTH = 25;
 
-    public Enemy(Context context, int x, int y, Bitmap image, Rect hitbox) {
+    public Enemy(Context context, int x, int y, Bitmap image) {
         // 1. set up the initial position of the Enemy
         this.xPosition = x;
         this.yPosition = y;
@@ -36,14 +36,14 @@ public class Enemy {
         this.image = image;
 //        this.image = BitmapFactory.decodeResource(context.getResources(), R.drawable.enemy);
 
-        this.hitbox = hitbox;
+//        this.hitbox = hitbox;
 //        // 3. Set the default hitbox - all enemies have same hitbox
-//        this.hitbox = new Rect(
-//                this.xPosition,
-//                this.yPosition,
-//                this.xPosition + this.image.getWidth(),
-//                this.yPosition + this.image.getHeight()
-//        );
+        this.hitbox = new Rect(
+                this.xPosition,
+                this.yPosition,
+                this.xPosition + this.image.getWidth(),
+                this.yPosition + this.image.getHeight()
+        );
     }
 
 
