@@ -333,7 +333,6 @@ public class GameEngine extends SurfaceView implements Runnable {
 
 
             if (this.enemy2.getHitbox().intersect(bullet)) {
-                this.enemy2.updateHitbox();
                 this.player.getBullets().remove(bullet);
                 oEnemylives = oEnemylives - 1;
                 if (oEnemylives == 0) {
