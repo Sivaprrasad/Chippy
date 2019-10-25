@@ -7,36 +7,27 @@ import android.graphics.Rect;
 
 import java.util.ArrayList;
 
-public class Player {
+public class Obstacles {
 
-    public int x;
-    public int y;
-
-    // PROPERTIES
+    // PROPERTIES:
+    // Image
+    // Hitbox
     private Bitmap image;
     private Rect hitbox;
 
-
     private int xPosition;
     private int yPosition;
-    public int width;
-    private int speed;
 
-    private ArrayList<Rect> pbullets = new ArrayList<Rect>();
-    private final int pBULLET_WIDTH = 20;
+    private ArrayList<Rect> bullets = new ArrayList<Rect>();
+    private final int BULLET_WIDTH = 15;
 
-
-
-    public Player(Context context, int x, int y,int width,int speed) {
+    public Obstacles(Context context, int x, int y) {
         // 1. set up the initial position of the Enemy
         this.xPosition = x;
         this.yPosition = y;
-        this.width = width;
-        this.speed = speed;
-
 
         // 2. Set the default image - all enemies have same image
-        this.image = BitmapFactory.decodeResource(context.getResources(), R.drawable.player);
+        this.image = BitmapFactory.decodeResource(context.getResources(), R.drawable.obstacle1);
 
         // 3. Set the default hitbox - all enemies have same hitbox
         this.hitbox = new Rect(
@@ -47,8 +38,9 @@ public class Player {
         );
     }
 
+    // Getter and setters
+    // Autogenerate this by doing Right Click --> Generate --> Getter&Setter
 
-    // GETTER AND SETTER METHODS
     public Bitmap getImage() {
         return image;
     }
@@ -81,26 +73,18 @@ public class Player {
         this.yPosition = yPosition;
     }
 
-    public int getSpeed() { return this.speed; }
-
-    public int getWidth() { return width; }
-
-    public void setWidth(int width) { this.width = width; }
-
-
     public ArrayList<Rect> getBullets() {
-        return pbullets;
+        return bullets;
     }
 
     public void setBullets(ArrayList<Rect> bullets) {
-        this.pbullets = bullets;
+        this.bullets = bullets;
     }
 
 
     public int getBulletWidth() {
-        return pBULLET_WIDTH;
+        return BULLET_WIDTH;
     }
-
 
     public void updateHitbox() {
         this.hitbox.left = this.xPosition;
@@ -111,12 +95,16 @@ public class Player {
 
     // Make a new bullet
     public void spawnBullet() {
-        // make bullet come out of middle of enemy
-        Rect pbullet = new Rect(this.xPosition,
+        // make bullet come out of middle of enemty
+        Rect bullet = new Rect(this.xPosition,
                 this.yPosition + this.image.getHeight() / 2,
-                this.xPosition + pBULLET_WIDTH,
-                this.yPosition + this.image.getHeight() / 2 + pBULLET_WIDTH
+                this.xPosition + BULLET_WIDTH,
+                this.yPosition + this.image.getHeight() / 2 + BULLET_WIDTH
         );
-        this.pbullets.add(pbullet);
+        this.bullets.add(bullet);
     }
+
+
+
+
 }

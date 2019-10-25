@@ -9,10 +9,9 @@ public class PowerUps {
     private Bitmap image;
     private int xPosition;
     private int yPosition;
+
     private Bitmap powpic;
     private Rect hitbox;
-
-
 
     public PowerUps(Context context, int x, int y, Bitmap image ) {
         // 1. set up the initial position of the Enemy
@@ -25,10 +24,7 @@ public class PowerUps {
                 this.xPosition + this.image.getWidth(),
                 this.yPosition + this.image.getHeight()
         );
-
-
     }
-
 
     public int getxPosition() {
         return xPosition;
@@ -60,6 +56,14 @@ public class PowerUps {
 
     public void setHitbox(Rect hitbox) {
         this.hitbox = hitbox;
+    }
+
+    public Bitmap getPowpic() {
+        return powpic;
+    }
+
+    public void setPowpic(Bitmap powpic) {
+        this.powpic = powpic;
     }
 
     public int getrand(int min, int max){
