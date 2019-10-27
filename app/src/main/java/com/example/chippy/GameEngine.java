@@ -29,10 +29,11 @@ public class GameEngine extends SurfaceView implements Runnable {
     int screenHeight;
     int screenWidth;
     int min = 2;
-    int max = 10;
+    int max = 5;
     int score = 0;
 
     List<PowerUps> pUp = new ArrayList<PowerUps>();
+    List<Obstacles> Obstacle = new ArrayList<Obstacles>();
     // ----------------------------
     // ## GAME STATS
     // ----------------------------
@@ -65,15 +66,16 @@ public class GameEngine extends SurfaceView implements Runnable {
     Enemy enemy3;
     Enemy enemy4;
     //obstacles
-//    Obstacles o1;
-//    Obstacles o2;
+
 
 
     Bitmap powpic;
     PowerUps powerUp;
     PowerUps addlives;
 
-    //Enemy enemy2;
+    Bitmap obstacleImg;
+    Obstacles ob1;
+    Obstacles ob2;
 
 
     Bitmap background;
@@ -124,19 +126,29 @@ public class GameEngine extends SurfaceView implements Runnable {
         enemyList.add(enemy3);
         enemyList.add(enemy4);
 
-//        this.o1 = new Obstacles(getContext(), 500, 350);
-
-
+        //Powerups
         this.powpic = decodeResource(context.getResources(), R.drawable.powerup);
-        this.powerUp = new PowerUps(getContext(),random*800, random*300,powpic);
+        this.powerUp = new PowerUps(getContext(),random*800, random*250,powpic);
         this.powerUp.updateHitbox();
 
         this.powpic = decodeResource(context.getResources(), R.drawable.extralife);
-        this.addlives = new PowerUps(getContext(),random*800, random*400,powpic);
+        this.addlives = new PowerUps(getContext(),random*800, random*500,powpic);
         this.addlives.updateHitbox();
 
         pUp.add(powerUp);
         pUp.add(addlives);
+
+        //Obstacles
+        this.obstacleImg = decodeResource(context.getResources(), R.drawable.obst1);
+        this.ob1 = new Obstacles(getContext(),random*800, random*350,obstacleImg);
+        this.ob1.updateHitbox();
+
+        this.obstacleImg = decodeResource(context.getResources(), R.drawable.obst2);
+        this.ob2 = new Obstacles(getContext(),random*800, random*200,obstacleImg);
+        this.ob2.updateHitbox();
+
+        Obstacle.add(ob1);
+        Obstacle.add(ob2);
 
         // setup the backgroundrandom
         this.background = decodeResource(context.getResources(), R.drawable.backgroundrandom);
@@ -165,7 +177,6 @@ public class GameEngine extends SurfaceView implements Runnable {
         return (int)(Math.random() * max + min);
 
     }
-
     
     // ------------------------------
     // GAME STATE FUNCTIONS (run, stop, start)
@@ -227,19 +238,7 @@ public class GameEngine extends SurfaceView implements Runnable {
             player.setyPosition(player.getyPosition() + 10);
             player.updateHitbox();
         }
-/*
-        this.o1.setxPosition(this.o1.getxPosition()-25);
 
-        // MOVE THE HITBOX (recalcluate the position of the hitbox)
-        this.o1.updateHitbox();
-
-        if (this.o1.getxPosition() <= 0) {
-            // restart the enemy in the starting position
-            this.o1.setxPosition(300);
-            this.o1.setyPosition(120);
-            this.o1.updateHitbox();
-        }
-*/
 
         // DEAL WITH BULLETS
 
@@ -247,40 +246,7 @@ public class GameEngine extends SurfaceView implements Runnable {
         if (numLoops % 25  == 0) {
             this.enemy1.spawnBullet();
         }
-/*
-        if (numLoops % 50  == 0) {
-            this.o1.spawnBullet();
-        }
 
-        for (int i = 0; i < this.o1.getBullets().size();i++) {
-            Rect bullet = this.o1.getBullets().get(i);
-
-            // For each bullet, check if teh bullet touched the wall
-            if (bullet.right < 0) {
-                this.o1.getBullets().remove(bullet);
-            }
-
-        }
-
-        for (int i = 0; i < this.o1.getBullets().size();i++) {
-            Rect bullet = this.o1.getBullets().get(i);
-
-            if (this.player.getHitbox().intersect(bullet)) {
-                this.player.setxPosition(300);
-                this.player.setyPosition(120);
-                this.player.updateHitbox();
-            }
-
-        }
-
-        if (this.player.getHitbox().intersect(this.o1.getHitbox()) == true) {
-            this.player.setxPosition(300);
-            this.player.setyPosition(120);
-            this.player.updateHitbox();
-
-            plives = plives - 1;
-        }
-*/
 
 //         Shoot a bullet every (5) iterations of the loop
 //        if (numLoops % 5  == 0) {
@@ -349,6 +315,7 @@ public class GameEngine extends SurfaceView implements Runnable {
                 this.player.getBullets().remove(bullet);
                 elives = elives - 1;
                 score = score + 2;
+//                enemyList.removeAll(enemyList);
             }
 
 
@@ -384,13 +351,13 @@ public class GameEngine extends SurfaceView implements Runnable {
                     score = score + 2;
                 }
             }
-        }
 
-        if (elives == 0) {
+            if (elives == 0) {
                 enemyList.removeAll(enemyList);
                 enemy1.setHitbox(new Rect(0, 0, 0, 0));
                 getContext().startActivity(new Intent(getContext(), WinScreenActivity.class));
-         }
+            }
+        }
 
 
         this.powerUp.setxPosition(this.powerUp.getxPosition()-15);
@@ -410,6 +377,27 @@ public class GameEngine extends SurfaceView implements Runnable {
             this.powpic = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.extralife);
             this.addlives = new PowerUps(getContext(),rand*1000, rand*550,powpic);
             pUp.add(addlives);
+        }
+
+
+        //Obstacles
+        this.ob1.setxPosition(this.ob1.getxPosition()-12);
+        this.ob1.updateHitbox();
+        this.ob2.setxPosition(this.ob2.getxPosition()-4);
+        this.ob2.updateHitbox();
+
+//        int rand = new Random().nextInt((max - min) + 1) + min;
+
+        if(this.ob1.getxPosition()<0 ){
+            this.obstacleImg = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.obst1);
+            this.ob1 = new Obstacles(getContext(),rand*800, rand*400,obstacleImg);
+            Obstacle.add(ob1);
+        }
+
+        if(this.ob1.getxPosition()<0 ){
+            this.obstacleImg = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.obst2);
+            this.ob2 = new Obstacles(getContext(),rand*800, rand*100,obstacleImg);
+            Obstacle.add(ob2);
         }
 
 
@@ -434,16 +422,52 @@ public class GameEngine extends SurfaceView implements Runnable {
             plives = plives - 1;
         }
 
+        // Collision for PowerUps
         if (this.player.getHitbox().intersect(this.powerUp.getHitbox()) == true) {
-            this.pUp.remove(powerUp);
             int BULLET_SPEED = 50;
             player.spawnBullet();
+            this.pUp.remove(powerUp);
         }
 
         if (this.player.getHitbox().intersect(this.addlives.getHitbox()) == true) {
-            this.pUp.remove(addlives);
             plives = plives + 1;
+            this.pUp.remove(addlives);
 
+        }
+
+        // COLLISION DETECTION BETWEEN PLayer BULLET AND OBSTACLES
+        for (int i = 0; i < this.player.getBullets().size();i++) {
+            Rect bullet = this.player.getBullets().get(i);
+
+            if (bullet.intersect(this.ob1.getHitbox())) {
+                this.ob1.updateHitbox();
+                this.player.getBullets().remove(bullet);
+                ob1.setHitbox(new Rect(0, 0, 0, 0));
+                Obstacle.remove(ob1);
+                score = score + 2;
+            }
+        }
+
+        for (int i = 0; i < this.player.getBullets().size();i++) {
+            Rect bullet = this.player.getBullets().get(i);
+
+            if (bullet.intersect(this.ob2.getHitbox())) {
+                this.ob2.updateHitbox();
+                this.player.getBullets().remove(bullet);
+                ob2.setHitbox(new Rect(0, 0, 0, 0));
+                Obstacle.remove(ob2);
+                score = score + 2;
+            }
+        }
+
+
+        // Collisions between Player and Obstacles.
+        if (this.player.getHitbox().intersect(this.ob1.getHitbox()) == true) {
+            plives = plives - 1;
+        }
+
+        if (this.player.getHitbox().intersect(this.ob2.getHitbox()) == true) {
+            plives = plives + 1;
         }
 
         if (this.fingerAction == "mousedown") {
@@ -451,7 +475,6 @@ public class GameEngine extends SurfaceView implements Runnable {
             player.setxPosition(player.x);
             player.setyPosition(player.y);
             player.updateHitbox();
-
 
         }
     }
@@ -492,10 +515,6 @@ public class GameEngine extends SurfaceView implements Runnable {
             // draw the player's hitbox
             canvas.drawRect(player.getHitbox(), paintbrush);
 
-//            //Obstacle
-//            canvas.drawBitmap(o1.getImage(), o1.getxPosition(), o1.getyPosition(), paintbrush);
-//            // 2. draw the Obstacles hitbox
-//            canvas.drawRect(o1.getHitbox(), paintbrush);
 
             for (int i = 0; i < enemyList.size(); i++) {
                 Enemy alleni = enemyList.get(i);
@@ -511,6 +530,14 @@ public class GameEngine extends SurfaceView implements Runnable {
             canvas.drawBitmap(addlives.getImage(), addlives.getxPosition(), addlives.getyPosition(), paintbrush);
             canvas.drawRect(addlives.getHitbox(), paintbrush);
 
+            paintbrush.setColor(Color.WHITE);
+            canvas.drawBitmap(ob1.getImage(), ob1.getxPosition(), ob1.getyPosition(), paintbrush);
+            canvas.drawRect(ob1.getHitbox(), paintbrush);
+
+            paintbrush.setColor(Color.WHITE);
+            canvas.drawBitmap(ob2.getImage(), ob2.getxPosition(), ob2.getyPosition(), paintbrush);
+            canvas.drawRect(ob2.getHitbox(), paintbrush);
+
             // draw enemy bullet on screen
             for (int i = 0; i < this.enemy1.getBullets().size(); i++) {
                 Rect bullet = this.enemy1.getBullets().get(i);
@@ -518,14 +545,6 @@ public class GameEngine extends SurfaceView implements Runnable {
                 paintbrush.setStyle(Paint.Style.FILL_AND_STROKE);
                 canvas.drawRect(bullet, paintbrush);
             }
-
-//            // draw obstacle bullet on screen
-//            for (int i = 0; i < this.enemy1.getBullets().size(); i++) {
-//                Rect bullet = this.enemy1.getBullets().get(i);
-//                paintbrush.setColor(Color.MAGENTA);
-//                paintbrush.setStyle(Paint.Style.STROKE);
-//                canvas.drawRect(bullet, paintbrush);
-//            }
 
 
             // draw player bullet on screen

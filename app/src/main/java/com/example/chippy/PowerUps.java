@@ -71,6 +71,7 @@ public class PowerUps {
         return (int)(Math.random() * max + min);
 
     }
+
     public void updateHitbox() {
         this.hitbox.left = this.xPosition;
         this.hitbox.top = this.yPosition;
